@@ -108,7 +108,7 @@ try {
   // Generate usage text.
   ostringstream usage;
   usage
-    << "Usage: " << argv[0] << " INPUT" << endl
+    << "Usage: " << argv[0] << " [OPTIONS] INPUT" << endl
     << endl
     << argparser;
 
