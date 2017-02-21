@@ -54,3 +54,7 @@ set_target_properties(
     LINK_LIBRARIES "${DEP_LIBS}"
     OUTPUT_NAME find-object-proposals
 )
+install(
+  TARGETS find-object-proposals
+  DESTINATION bin
+)
