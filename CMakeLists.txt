@@ -35,6 +35,7 @@ add_library_dep( opencv_videoio )
 add_library_dep( opencv_video )
 
 add_library_dep( jpeg )
+add_library_dep( png )
 
 add_include_dep( "time.h" )
 
