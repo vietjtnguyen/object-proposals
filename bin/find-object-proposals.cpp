@@ -105,12 +105,14 @@ try {
         "(default: same codec as input video)", 1},
     }};
 
+  // Generate usage text.
   ostringstream usage;
   usage
     << "Usage: " << argv[0] << " INPUT" << endl
     << endl
     << argparser;
 
+  // Parse command line arguments.
   argagg::parser_results args;
   try {
     args = argparser.parse(argc, argv); 
@@ -119,13 +121,17 @@ try {
     return EXIT_FAILURE;
   }
   
+  // Print out the help message if specified.
   if (args["help"]) {
     cerr << usage.str();
     return EXIT_SUCCESS;
   }
 
+  // Make sure an input argument has been specified.
   if (args.pos.size() != 1) {
-    cerr << usage.str();
+    cerr
+      << usage.str() << endl
+      << "Missing input file." << endl;
     return EXIT_FAILURE;
   }
 
@@ -134,7 +140,7 @@ try {
   if (args["k"]) {
     k_values = dlib::mat(args["k"].as<vector<double>>());
   }
-  unsigned long min_size = args["minsize"].as<long>(20);
+  const unsigned long min_size = args["minsize"].as<long>(20);
 
   // Define single image processing function.
   auto find_object_proposals = [&](const cv::Mat& cv_img) {
@@ -157,12 +163,15 @@ try {
       }
     };
 
-  string input_path(args.pos[0]);
+  const string input_path(args.pos[0]);
 
+  // Handle processing a video.
   if (args["video"]) {
-    cv::VideoCapture video_in(input_path);
-    cv::Mat img;
 
+    // Open the input as a video stream.
+    cv::VideoCapture video_in(input_path);
+
+    // Initialize the output video if configured to output a visualization.
     cv::VideoWriter video_out;
     if (args["viz"]) {
       auto output_name = args["viz"].as<string>();
@@ -190,13 +199,17 @@ try {
       }
     }
 
+    // Define variables for per-frame video processing loop.
+    cv::Mat img;
     bool visualize = args["viz"];
     auto frame_index = args["videostart"].as<int>(0);
-    int end_frame = args["videoend"].as<int>(-1);
+    const int end_frame = args["videoend"].as<int>(-1);
     if (frame_index > 0) {
       video_in.set(CV_CAP_PROP_POS_FRAMES, static_cast<double>(frame_index));
     }
-    while (video_in.read(img)) {
+
+    // Process frames in the video.
+    while (video_in.read(img) && frame_index <= end_frame) {
       uint64_t last_time = get_hr_time();
       auto rects = find_object_proposals(img);
       uint64_t new_time = get_hr_time();
@@ -215,11 +228,9 @@ try {
         }
       }
       ++frame_index;
-      if (frame_index > end_frame) {
-        break;
-      }
     }
 
+  // Handle processing a single image.
   } else {
     auto img = cv::imread(input_path);
     auto rects = find_object_proposals(img);
@@ -235,5 +246,5 @@ try {
   return EXIT_SUCCESS;
 } catch (const std::exception& e) {
   cerr << "Encountered unhandled exception: " << e.what() << endl;
-  return EXIT_FAILURE;
+  throw e;
 }
